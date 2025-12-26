@@ -7,9 +7,12 @@ class Database():
     def __init__(self):
         self.__path = "data/data.db"
         self.__key = 'P@ssw0rd'
+
         self.__connection = sql.connect(self.__path)
         self.__cursor = self.__connection.cursor()
+
         self.__cursor.execute(f"PRAGMA key='{self.__key}';")
+
         try:
             self.__cursor.execute("SELECT Id FROM Examinations")
             self.__cursor.execute("SELECT Id FROM People")
@@ -977,13 +980,15 @@ class Database():
 
         self.__connection.commit()
 
+# Функция неправильная
     def execute(self, statement):
-        if type(statement) == str:
-            result = self.__cursor.execute(statement)
-        elif type(statement) == list:
-            for statement_ in statement:
-                self.__cursor.execute(statement_)
-        return result
+        if isinstance(statement, str):
+            return self.__cursor.execute(statement)
+        if isinstance(statement, list):
+            for st in statement:
+                self.__cursor.execute(st)
+            return self.__cursor
+        raise TypeError("statement must be str or list[str]")
 
     def commit(self):
         self.__connection.commit()
@@ -1050,9 +1055,10 @@ class Person():
                 self.__db.execute(statement)
         self.__db.commit()
 
-    def update_person(self, id: str, full_name: str, birthdate: str):
+# Неправильные переменные
+    def update_person(self, id: int, full_name: str, birthdate: str):
         self.__id = id
-        self.__full_name
+        self.__full_name = full_name # добавил переменную
         self.__birthdate = birthdate
 
     def add_to_database(self):
@@ -2722,7 +2728,7 @@ class Templates():
         for template_index in range(len(self.__templates[field])):
             if self.__templates[field][template_index][0] == id:
                 self.__update_in_database(id, field, template)
-                self.__templates[field][template_index][2] = template
+                self.__templates[field][template_index][1] = template # Замена индекса 2 на 1, так как иначе выводится ошибка
                 break
 
     def delete_template(self, field, template):

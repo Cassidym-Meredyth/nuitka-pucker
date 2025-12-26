@@ -1,6 +1,6 @@
 PyQt5
 patchelf
 nuitka
-fitz
+pymupdf
 sqlcipher3-wheels
 argon2
