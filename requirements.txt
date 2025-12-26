@@ -3,4 +3,4 @@ patchelf
 nuitka
 pymupdf
 sqlcipher3-wheels
-argon2
+argon2-cffi
