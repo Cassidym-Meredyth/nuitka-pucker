@@ -1,5 +1,4 @@
 PyQt5
-patchelf
 nuitka
 pymupdf
 sqlcipher3-wheels
