@@ -1,0 +1,5 @@
+PyQt5
+nuitka
+fitz
+sqlcipher3-wheels
+argon2-cffi

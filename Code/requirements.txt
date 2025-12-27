@@ -1,0 +1,5 @@
+PyQt5
+nuitka
+pymupdf
+sqlcipher3-wheels
+argon2-cffi

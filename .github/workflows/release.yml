@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write  # нужно для создания/обновления GitHub Release
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install deps + run tests
+        run: |
+          python -m pip install -U pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest pytest-cov
+          cd Code
+          python -m pip install -U coverage
+          coverage run -m pytest -v
+          coverage report --include="*/data.py" --fail-under=70 -m
+
+  build-linux:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build linux app in Docker and extract binary
+        run: |
+          IMAGE=python-app:${{ github.sha }}
+          docker build -t "$IMAGE" -f Dockerfile.linux .
+          id=$(docker create "$IMAGE")
+          mkdir -p dist
+          docker cp "$id":/app/Crystal dist/Crystal-linux
+          docker rm "$id"
+          tar -czf dist/Crystal-linux.tar.gz -C dist Crystal-linux
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-linux
+          path: dist/Crystal-linux.tar.gz
+
+  build-windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Build Windows app (Nuitka)
+        shell: pwsh
+        run: |
+          python -m pip install -U pip
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+          pip install nuitka
+          cd Code
+          python -m nuitka `
+            --standalone --onefile `
+            --enable-plugin=pyqt5 `
+            --follow-imports `
+            --windows-console-mode=disable `
+            --windows-icon-from-ico=img/icon.ico `
+            --output-filename=Crystal `
+            main.pyw
+          New-Item -ItemType Directory -Force -Path ..\dist | Out-Null
+          Move-Item .\Crystal.exe ..\dist\Crystal-win.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-windows
+          path: dist/Crystal-win.exe
+
+  release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish GitHub Release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/Crystal-linux.tar.gz
+            dist/Crystal-win.exe
