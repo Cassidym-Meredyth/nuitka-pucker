@@ -76,8 +76,7 @@ jobs:
         shell: pwsh
         working-directory: ./Code
         run: |
-          python -m nuitka`
-            --standalone --onefile --include-module=PyQt5 --include-module=fitz --follow-imports --enable-plugin=pyqt5 --output-filename=Crystal --quiet --windows-console-mode=disable --windows-icon-from-ico=img/icon.ico main.pyw
+          python -m nuitka --standalone --onefile --include-module=PyQt5 --include-module=fitz --follow-imports --enable-plugin=pyqt5 --output-filename=Crystal --quiet --windows-console-mode=disable --windows-icon-from-ico=img/icon.ico main.pyw
           New-Item -ItemType Directory -Force -Path ..\dist | Out-Null
           Move-Item .\Crystal.exe ..\dist\Crystal-win.exe
       
